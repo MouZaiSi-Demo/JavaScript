@@ -1,0 +1,3707 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0060)https://www.ruanyifeng.com/blog/2018/06/javascript-this.html -->
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+<meta name="generator" content="Movable Type  5.2.2">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--link rel="stylesheet" href="http://www.ruanyifeng.com/blog/styles.css" type="text/css" /-->
+<link rel="start" href="https://www.ruanyifeng.com/blog/" title="Home">
+<link rel="alternate" type="application/atom+xml" title="Recent Entries" href="https://feeds.feedburner.com/ruanyifeng">
+<script src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/hm.js.下载"></script><script async="" src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/analytics.js.下载"></script><script type="text/javascript" src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/mt.js.下载"></script>
+<script type="text/javascript" src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/advertisements.js.下载"></script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="http://www.ruanyifeng.com/blog/2010/04/talk_with_wangjianshuo.html">
+<dc:title>与王建硕的对话</dc:title>
+<dc:description>四月初，建硕约我见面聊天。...</dc:description>
+<dc:creator>阮一峰</dc:creator>
+<dc:date>2010-04-29T02:40:06+08:00</dc:date>
+<license rdf:resource="http://creativecommons.org/licenses/by-nc-nd/3.0/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by-nc-nd/3.0/">
+</License>
+</rdf:RDF>
+-->
+
+<style>
+body {
+  background-color: #f5f5d5;
+}
+
+#container::before {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: rgba(0,0,0,0.1);
+  text-align: center;
+  content: "本站显示不正常，可能因为您使用了广告拦截器。";
+}
+
+</style>
+<script>
+function loadjscssfile(filename, filetype){
+    if (filetype=="js"){ //if filename is a external JavaScript file
+        var fileref=document.createElement('script')
+        fileref.setAttribute("type","text/javascript")
+        fileref.setAttribute("src", filename)
+    }
+    else if (filetype=="css"){ //if filename is an external CSS file
+        var fileref=document.createElement("link")
+        fileref.setAttribute("rel", "stylesheet")
+        fileref.setAttribute("type", "text/css")
+        fileref.setAttribute("href", filename)
+    }
+    if (typeof fileref!="undefined")
+        document.getElementsByTagName("head")[0].appendChild(fileref)
+}
+//loadjscssfile("http://www.ruanyifeng.com/blog/styles.css", "css");
+loadjscssfile('/static/themes/theme_scrapbook/theme_scrapbook.min.css', "css");
+
+
+function checker() {
+  if (/mobile|android/i.test(navigator.userAgent)) return; 
+  window.comments && window.comments.setAttribute("style", "!important");
+  // var img = document.querySelector('img[src^="http://www.ruanyifeng.com/blog/images"]');
+  var img = document.querySelector('a > img[src*="wangbase.com/blogimg/asset/"]');
+  var isAdblocker = (typeof adblock === 'undefined');
+  if (
+    /*isAdblocker || */
+    (img && window.getComputedStyle(img).display === 'none') ||
+    (img && window.getComputedStyle(img.parentElement).display === 'none')
+  ){
+    var sponsor = document.querySelector('#main-content');
+    var prompt = document.createElement('div');
+    prompt.style = 'border: 1px solid #c6c6c6;border-radius: 4px;background-color: #f5f2f0;padding: 15px; font-size: 14px;';
+    prompt.innerHTML = '<p>您使用了广告拦截器，导致本站内容无法显示。</p><p>请将 www.ruanyifeng.com 加入白名单，解除广告屏蔽后，刷新页面。谢谢。</p>';
+    sponsor.parentNode.replaceChild(prompt, sponsor);
+    // document.querySelector('#main-content').innerHTML = '';
+  }
+}
+
+setTimeout(checker, 1000);
+</script><link rel="stylesheet" type="text/css" href="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/theme_scrapbook.min.css">
+
+    
+    <link rel="prev" href="https://www.ruanyifeng.com/blog/2018/06/weekly-issue-9.html" title="每周分享第 9 期">
+    <link rel="next" href="https://www.ruanyifeng.com/blog/2018/06/weekly-issue-10.html" title="每周分享第 10 期">
+    
+    <title>JavaScript 的 this 原理 - 阮一峰的网络日志</title>
+<input type="hidden" id="_w_tusk"><script type="text/javascript" src="chrome-extension://dbjbempljhcmhlfpfacalomonjpalpko/scripts/inspector.js"></script></head>
+<body id="scrapbook" class="mt-entry-archive one-column">
+<script>
+if (/mobile/i.test(navigator.userAgent) || /android/i.test(navigator.userAgent)) document.body.classList.add('mobile');
+
+/*
+window.addEventListener('load', function(event) {
+  setTimeout(function () {
+    hab('#sup-post-2');
+    hab('#cre-inner');
+  }, 1000);
+});
+*/
+</script>
+    <div id="container">
+        <div id="container-inner">
+
+            <div id="header">
+    <div id="header-inner">
+        <div id="header-content">
+
+
+            <div id="header-name">阮一峰的网络日志 <span id="site_location"> » <a href="https://www.ruanyifeng.com/blog/" accesskey="1">首页</a></span><span id="site_archive"> » <a href="https://www.ruanyifeng.com/blog/archives.html">档案</a></span>
+</div>
+
+<div id="google_search">
+<!-- SiteSearch Google -->
+<form action="https://www.baidu.com/s" target="_blank" method="get" id="cse-search-box">
+  <div>
+  <input type="text" size="20" name="origin" class="searchbox" id="sbi" value="">
+  <input type="hidden" name="wd" value="">
+  <!--input type="image" src="/static/themes/theme_scrapbook/images/top_search_submit.gif" class="searchbox_submit" value="" alt="搜索" name="sa" onclick="this.form.wd.value = this.form.origin.value + ' inurl:www.ruanyifeng.com/blog'" /-->
+  <input type="image" src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/top_search_submit.gif" class="searchbox_submit" value="" alt="搜索" name="sa" onclick="this.form.wd.value = this.form.origin.value + &#39; 阮一峰&#39;">
+</div>
+</form>
+
+<!-- SiteSearch Google -->
+</div>
+<div id="feed_icon">
+<a href="https://www.ruanyifeng.com/feed.html?utm_source=" title="订阅Feed">
+<!--img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAUzSURBVHjavFdbbFRVFF3nPjoz7dTWTittaW0jUDRAUqaNojyqREnEQKgfUj9MqqAmhqRt/OCD4CuY+Kckoh+aiGKC+gMJbdHoRysJ8dkhhmJLNdDKtJU+6GMK87j3Hs85d2Z6HzNtMYWb3Dn3NWftvfba+5xNYDl+e6Fkj6yqb/oDRbWq14vlPBLRKCITkxf0ROLt+hNjp1PPSRK4kA3vF1dXNRcWlyA2OQU9eos9opAkAiKxD+XkKO6t15aRWO7J/MgmAZU8MEgexgZHMX518Dh72sYMmVKShnxWuWHdHtxKIDIYTgMuDzgfmSOIQkYMpdUF8OY92Hytt4/jvkg47czzU16iQovM3QFwmNck+Yyduu7D6NA0Z6JR4THntFs9V4tWQg6Ui3s6MwKDncsFTnXKLJhDSeUK3AgPtyhccDzmVs999buRt/1Vm4i0od+hX7+MRG87jPGB/w1u8FPj9xEw7McVrnYuOCvtpjTth3J/nTg99c8LRhKhr6D3dTB5R24bXFwbMXBsyZzeoXaycEpJ95TB09AGX/NpqLVNtw8urnVzLvHjFNxiFqRy2OOHuqUVnue+ACkoWzo4O6lGzTmuHq6nPvY2m9rVqjrIK2rMEKxqyG5NPAKt+wjo0LklgfNxJkZMA3KJvqRUk3z5UFY3QH14P0h+WUY79HPvgv7VuSg4ZRGY1YgZgqXmORccF17sy2ehnf9AeO085K2HQFbtXBScj0LcpgF2cN+WV+DZ/LJQu6gD4R7oV7pBJwbSgtMvfiPoVp56DySwxm7EtkMs1WdAB7qzggsDJKQYsHucSkOudrkiCPWR/fA2nYCn8SNIK4NptSMyAu3sAdDRkIsJdfth0LzSrODUoPNZ4KI9SxJI5UHk7D4GdQfz2us31c7CoHMjRkKuDPHseCMrONVhNcDJwMJpKFVvg9L4OaTiNWm1x789KCqkrXhVBiEz0WYCT2nAzQAD1/vaETv1GrRfP4Vx5cfMNcDPwvP0h0DhanPym7OIf/+O67vcJ1/PCJ4KgdzaUP6Wz+dU+5yIL6fV+PsHGAOdwlPpvvUOyeeAVGyCdqkDNB6DPjsBSrnndfOGevOh3RhGItxvA+fX1CtbGFhgYUFkFMZPR6F1HnClHq8HyubWtJexX06CRmdt33hrd7nA7SFY4qoGpnYuOKcRykPPgDCBcsHx9Iv+fNL2PueBehCWUfYQIIMGLOCcOmXDXsh1+yCt35tUPfvzGFuSvzvoinXOxqa02qOhM6733nVP2MAdaej2XN11DPKjLZCD+yBvahGCo7JfTKAN9UD7s8Oe9zUNIhz8fWI8DG2k38WCFdxugANcXrvTVd1IEbuv3Jour7Hzn7jLMBNfKs7R3i67gRVrbeCOEDhinmWhAatsqdquM2XzHZINhK2cqTjHr/XZdVJUbgN3MWAVXKbSyg9jesRW2xP9di+lwrL5ojM3m2H/kG9hwcIA37c71W6wJdW2J2S5nrjYbq/t1AHAhJsKQeyfPvf6IMJgghPJhFZ4x0KlfLFvt22du45Au/A1SOlGc0P672XXwhLtOcM0kTTEMMd0qkVmMNXxMd/tsedUjInr4SQDgOfeXMSiN0FCL5WHah4L1qqYXPJOJlttd+a5M+YpcG5poLYKQ5f+6JJ4r8bbJYP47hq4r7QAs9PjYNhHJd4o8l5taiwuOpa7AS4XKqI/5NjJbTnaWK92nLdLuhQAJayRNMiygXPBeQN+Qbvu0zDc3y+aUzhbkGR73sI7ljvUnndx2q3t+X8CDAD66FtrIL864AAAAABJRU5ErkJggg==" alt="" style="border: 0pt none;" /-->
+<img src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/bg2021072117.png" alt="" style="border: 0pt none;">
+</a></div>
+
+        </div>
+    </div>
+</div>
+
+
+
+            <div id="content">
+                <div id="content-inner">
+
+
+                    <div id="alpha">
+                        <div id="alpha-inner">
+
+
+                            <div id="entry-1993" class="entry-asset asset hentry">
+                                <div class="asset-header">
+<div class="asset-nav entry-nav">
+
+<div class="entry-location">
+<ul>
+<li>上一篇：<a href="https://www.ruanyifeng.com/blog/2018/06/weekly-issue-9.html" title="每周分享第 9 期">每周分享第&nbsp;9&nbsp;期&nbsp;&nbsp;</a></li>
+<li>下一篇：<a href="https://www.ruanyifeng.com/blog/2018/06/weekly-issue-10.html" title="每周分享第 10 期">每周分享第&nbsp;10&nbsp;期&nbsp;</a></li>
+</ul>
+</div>
+
+
+    
+                                    <div class="entry-categories">
+                                        <p>分类<span class="delimiter">：</span></p>
+                                        <ul>
+                                            <li><a href="https://www.ruanyifeng.com/blog/javascript/" rel="tag">JavaScript</a></li>
+                                        </ul>
+                                    </div>
+    
+
+
+                                            
+<div class="entry-location-mobile" style="float: right;">
+<ul>
+<li><a href="https://www.ruanyifeng.com/blog/2018/06/weekly-issue-9.html" title="每周分享第 9 期">⇐&nbsp;</a></li>
+<li><a href="https://www.ruanyifeng.com/blog/2018/06/weekly-issue-10.html" title="每周分享第 10 期">&nbsp;⇒</a></li>
+</ul>
+</div>
+
+</div>
+</div>
+
+                          
+<article class="hentry">
+                                    <h1 id="page-title" class="asset-name entry-title">JavaScript 的 this 原理</h1>
+
+
+
+<div class="asset-meta">
+                                        
+
+                                            <p class="vcard author">作者： <a class="fn url" href="https://www.ruanyifeng.com/">阮一峰</a></p>
+                                    <p>日期： <a href="https://www.ruanyifeng.com/blog/2018/06/"><abbr class="published" title="2018-06-18T15:43:41+08:00">2018年6月18日</abbr></a></p>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+                                
+                                <div class="asset-content entry-content" id="main-content">
+
+                                    <!-- div class="asset-body" -->
+                                        <h2>一、问题的由来</h2>
+
+<p>学懂 JavaScript 语言，一个标志就是理解下面两种写法，可能有不一样的结果。</p>
+
+                                    <!-- /div -->
+
+
+                                    <!-- div id="more" class="asset-more" -->
+                                        <blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token keyword">var</span> obj <span class="token operator">=</span> <span class="token punctuation">{</span>
+  foo<span class="token punctuation">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token keyword">var</span> foo <span class="token operator">=</span> obj<span class="token punctuation">.</span>foo<span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">
+// 写法一
+</span>obj<span class="token punctuation">.</span><span class="token function">foo<span class="token punctuation">(</span></span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true">
+// 写法二
+</span><span class="token function">foo<span class="token punctuation">(</span></span><span class="token punctuation">)</span>
+</code></pre></blockquote>
+
+<p>上面代码中，虽然<code>obj.foo</code>和<code>foo</code>指向同一个函数，但是执行结果可能不一样。请看下面的例子。</p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token keyword">var</span> obj <span class="token operator">=</span> <span class="token punctuation">{</span>
+  foo<span class="token punctuation">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> console<span class="token punctuation">.</span><span class="token function">log<span class="token punctuation">(</span></span>this<span class="token punctuation">.</span>bar<span class="token punctuation">)</span> <span class="token punctuation">}</span><span class="token punctuation">,</span>
+  bar<span class="token punctuation">:</span> <span class="token number">1</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token keyword">var</span> foo <span class="token operator">=</span> obj<span class="token punctuation">.</span>foo<span class="token punctuation">;</span>
+<span class="token keyword">var</span> bar <span class="token operator">=</span> <span class="token number">2</span><span class="token punctuation">;</span>
+
+obj<span class="token punctuation">.</span><span class="token function">foo<span class="token punctuation">(</span></span><span class="token punctuation">)</span><span class="token comment" spellcheck="true"> // 1
+</span><span class="token function">foo<span class="token punctuation">(</span></span><span class="token punctuation">)</span><span class="token comment" spellcheck="true"> // 2
+</span></code></pre></blockquote>
+
+<p>这种差异的原因，就在于函数体内部使用了<code>this</code>关键字。很多教科书会告诉你，<code>this</code>指的是函数运行时所在的环境。对于<code>obj.foo()</code>来说，<code>foo</code>运行在<code>obj</code>环境，所以<code>this</code>指向<code>obj</code>；对于<code>foo()</code>来说，<code>foo</code>运行在全局环境，所以<code>this</code>指向全局环境。所以，两者的运行结果不一样。</p>
+
+<p>这种解释没错，但是教科书往往不告诉你，为什么会这样？也就是说，函数的运行环境到底是怎么决定的？举例来说，为什么<code>obj.foo()</code>就是在<code>obj</code>环境执行，而一旦<code>var foo = obj.foo</code>，<code>foo()</code>就变成在全局环境执行？</p>
+
+<p>本文就来解释 JavaScript 这样处理的原理。理解了这一点，你就会彻底理解<code>this</code>的作用。</p>
+
+<h2>二、内存的数据结构</h2>
+
+<p>JavaScript 语言之所以有<code>this</code>的设计，跟内存里面的数据结构有关系。</p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token keyword">var</span> obj <span class="token operator">=</span> <span class="token punctuation">{</span> foo<span class="token punctuation">:</span>  <span class="token number">5</span> <span class="token punctuation">}</span><span class="token punctuation">;</span>
+</code></pre></blockquote>
+
+<p>上面的代码将一个对象赋值给变量<code>obj</code>。JavaScript 引擎会先在内存里面，生成一个对象<code>{ foo: 5 }</code>，然后把这个对象的内存地址赋值给变量<code>obj</code>。</p>
+
+<p><img src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/bg2018061801.png" alt="" title=""></p>
+
+<p>也就是说，变量<code>obj</code>是一个地址（reference）。后面如果要读取<code>obj.foo</code>，引擎先从<code>obj</code>拿到内存地址，然后再从该地址读出原始的对象，返回它的<code>foo</code>属性。</p>
+
+<p>原始的对象以字典结构保存，每一个属性名都对应一个属性描述对象。举例来说，上面例子的<code>foo</code>属性，实际上是以下面的形式保存的。</p>
+
+<p><img src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/bg2018061802.png" alt="" title=""></p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token punctuation">{</span>
+  foo<span class="token punctuation">:</span> <span class="token punctuation">{</span>
+    <span class="token punctuation">[</span><span class="token punctuation">[</span>value<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">:</span> <span class="token number">5</span>
+    <span class="token punctuation">[</span><span class="token punctuation">[</span>writable<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">:</span> <span class="token boolean">true</span>
+    <span class="token punctuation">[</span><span class="token punctuation">[</span>enumerable<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">:</span> <span class="token boolean">true</span>
+    <span class="token punctuation">[</span><span class="token punctuation">[</span>configurable<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">:</span> <span class="token boolean">true</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></blockquote>
+
+<p>注意，<code>foo</code>属性的值保存在属性描述对象的<code>value</code>属性里面。</p>
+
+<h2>三、函数</h2>
+
+<p>这样的结构是很清晰的，问题在于属性的值可能是一个函数。</p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token keyword">var</span> obj <span class="token operator">=</span> <span class="token punctuation">{</span> foo<span class="token punctuation">:</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span> <span class="token punctuation">}</span><span class="token punctuation">;</span>
+</code></pre></blockquote>
+
+<p>这时，引擎会将函数单独保存在内存中，然后再将函数的地址赋值给<code>foo</code>属性的<code>value</code>属性。</p>
+
+<p><img src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/bg2018061803.png" alt="" title=""></p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token punctuation">{</span>
+  foo<span class="token punctuation">:</span> <span class="token punctuation">{</span>
+    <span class="token punctuation">[</span><span class="token punctuation">[</span>value<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">:</span> 函数的地址
+    <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+  <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre></blockquote>
+
+<p>由于函数是一个单独的值，所以它可以在不同的环境（上下文）执行。</p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token keyword">var</span> f <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token keyword">var</span> obj <span class="token operator">=</span> <span class="token punctuation">{</span> f<span class="token punctuation">:</span> f <span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">
+// 单独执行
+</span><span class="token function">f<span class="token punctuation">(</span></span><span class="token punctuation">)</span>
+<span class="token comment" spellcheck="true">
+// obj 环境执行
+</span>obj<span class="token punctuation">.</span><span class="token function">f<span class="token punctuation">(</span></span><span class="token punctuation">)</span>
+</code></pre></blockquote>
+
+<h2>四、环境变量</h2>
+
+<p>JavaScript 允许在函数体内部，引用当前环境的其他变量。</p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token keyword">var</span> f <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  console<span class="token punctuation">.</span><span class="token function">log<span class="token punctuation">(</span></span>x<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+</code></pre></blockquote>
+
+<p>上面代码中，函数体里面使用了变量<code>x</code>。该变量由运行环境提供。</p>
+
+<p>现在问题就来了，由于函数可以在不同的运行环境执行，所以需要有一种机制，能够在函数体内部获得当前的运行环境（context）。所以，<code>this</code>就出现了，它的设计目的就是在函数体内部，指代函数当前的运行环境。</p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token keyword">var</span> f <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  console<span class="token punctuation">.</span><span class="token function">log<span class="token punctuation">(</span></span>this<span class="token punctuation">.</span>x<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre></blockquote>
+
+<p>上面代码中，函数体里面的<code>this.x</code>就是指当前运行环境的<code>x</code>。</p>
+
+<blockquote><pre class=" language-javascript"><code class=" language-javascript">
+<span class="token keyword">var</span> f <span class="token operator">=</span> <span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  console<span class="token punctuation">.</span><span class="token function">log<span class="token punctuation">(</span></span>this<span class="token punctuation">.</span>x<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token keyword">var</span> x <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+<span class="token keyword">var</span> obj <span class="token operator">=</span> <span class="token punctuation">{</span>
+  f<span class="token punctuation">:</span> f<span class="token punctuation">,</span>
+  x<span class="token punctuation">:</span> <span class="token number">2</span><span class="token punctuation">,</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">
+// 单独执行
+</span><span class="token function">f<span class="token punctuation">(</span></span><span class="token punctuation">)</span><span class="token comment" spellcheck="true"> // 1
+</span><span class="token comment" spellcheck="true">
+// obj 环境执行
+</span>obj<span class="token punctuation">.</span><span class="token function">f<span class="token punctuation">(</span></span><span class="token punctuation">)</span><span class="token comment" spellcheck="true"> // 2
+</span></code></pre></blockquote>
+
+<p>上面代码中，函数<code>f</code>在全局环境执行，<code>this.x</code>指向全局环境的<code>x</code>。</p>
+
+<p><img src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/bg2018061804.png" alt="" title=""></p>
+
+<p>在<code>obj</code>环境执行，<code>this.x</code>指向<code>obj.x</code>。</p>
+
+<p><img src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/bg2018061805.png" alt="" title=""></p>
+
+<p>回到本文开头提出的问题，<code>obj.foo()</code>是通过<code>obj</code>找到<code>foo</code>，所以就是在<code>obj</code>环境执行。一旦<code>var foo = obj.foo</code>，变量<code>foo</code>就直接指向函数本身，所以<code>foo()</code>就变成在全局环境执行。</p>
+
+<p>（完）</p>
+
+                                    <!-- /div -->
+
+                                </div>
+    <script type="text/javascript" src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/newwindow.js.下载"></script>
+                                <div class="asset-footer">
+
+<h3>文档信息</h3>
+<ul>
+<li>版权声明：自由转载-非商用-非衍生-保持署名（<a href="https://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh">创意共享3.0许可证</a>）</li>
+<li>发表日期： <abbr class="published" title="2018-06-18T15:43:41+08:00">2018年6月18日</abbr></li>
+
+</ul>
+                                </div>
+</article>
+                            </div>
+
+
+
+  <div style="display: inline-block ! important;width: 100%;">
+  
+  </div>
+
+
+
+<div id="related_entries">
+<h2>相关文章</h2>
+<ul>
+
+<li><strong>2021.01.20: <a href="https://www.ruanyifeng.com/blog/2021/01/clipboard-api.html">剪贴板操作 Clipboard API 教程</a></strong>
+
+                           <div class="entry-body">
+                              一、简介
+
+浏览器允许 JavaScript 脚本读写剪贴板，自动复制或粘贴内容。
+
+                           </div>
+
+</li>
+
+ 
+<li><strong>2020.12.28: <a href="https://www.ruanyifeng.com/blog/2020/12/fetch-tutorial.html">Fetch API 教程</a></strong>
+
+                           <div class="entry-body">
+                              fetch()是 XMLHttpRequest 的升级版，用于在 JavaScript 脚本里面发出 HTTP 请求。
+
+                           </div>
+
+</li>
+
+ 
+<li><strong>2020.09.15: <a href="https://www.ruanyifeng.com/blog/2020/09/react-hooks-useeffect-tutorial.html">轻松学会 React 钩子：以  useEffect() 为例</a></strong>
+
+                           <div class="entry-body">
+                              五年多前，我写过 React 系列教程。不用说，内容已经有些过时了。
+
+                           </div>
+
+</li>
+
+ 
+<li><strong>2020.08.20: <a href="https://www.ruanyifeng.com/blog/2020/08/how-nodejs-use-es6-module.html">Node.js 如何处理 ES6 模块</a></strong>
+
+                           <div class="entry-body">
+                              学习 JavaScript 语言，你会发现它有两种格式的模块。
+
+                           </div>
+
+</li>
+
+ 
+</ul>
+</div>
+
+
+
+                    
+
+                    <div id="comments" class="comments" style="!important">
+
+
+    
+    
+        
+    <h2 class="comments-header">留言（88条）</h2>
+
+    <div id="comments-content" class="comments-content" style="clear: left;">
+        
+        <div id="comment-389867" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">165692640</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389867">
+            <p>文中讲到 “环境” ，我脑中浮现的是“调用者级级别”或者“调用者所在的栈层”</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 18, 2018  4:38 PM">2018年6月18日 16:38</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389867">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用165692640的这条留言" onclick="return CommentQuote(&#39;comment-quote-389867&#39;,&#39;165692640&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389868" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://godzzzzz.github.io" href="https://godzzzzz.github.io/" target="_blank" rel="nofollow">GodzzZZZ</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389868">
+            <p><strong>简单明了</strong></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 18, 2018  6:25 PM">2018年6月18日 18:25</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389868">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用GodzzZZZ的这条留言" onclick="return CommentQuote(&#39;comment-quote-389868&#39;,&#39;GodzzZZZ&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389871" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://Youth2009.org" href="http://youth2009.org/" target="_blank" rel="nofollow">dc</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389871">
+            <p>上面代码中，函数f在全局环境执行，this.x指向全局环境的this。——&gt;上面代码中，函数f在全局环境执行，this.x指向全局环境的x。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 18, 2018  9:01 PM">2018年6月18日 21:01</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389871">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用dc的这条留言" onclick="return CommentQuote(&#39;comment-quote-389871&#39;,&#39;dc&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389873" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://hx-dl.github.oo" href="http://hx-dl.github.oo/" target="_blank" rel="nofollow">行无忌</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389873">
+            <p>很喜欢前辈的文章，通俗易懂</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 18, 2018  9:52 PM">2018年6月18日 21:52</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389873">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用行无忌的这条留言" onclick="return CommentQuote(&#39;comment-quote-389873&#39;,&#39;行无忌&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389876" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">焦某</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389876">
+            <p>Hello</p>
+
+<p>有个小建议<br>
+</p>
+
+<p>这样 是不是更好一点？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 18, 2018 11:35 PM">2018年6月18日 23:35</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389876">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用焦某的这条留言" onclick="return CommentQuote(&#39;comment-quote-389876&#39;,&#39;焦某&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389877" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">焦某</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389877">
+            <blockquote>
+<pre>引用焦某的发言：</pre>
+
+<p>Hello</p>
+
+<p>有个小建议</p>
+
+<p><br>
+这样 是不是更好一点？</p>
+
+</blockquote>
+
+<p>没想到是纯html。。。。。</p>
+
+<p>搜索按钮的onclick值改为<br>
+this.form.wd.value = this.form.origin.value + ' 阮一峰'</p>
+
+<p><br>
+是不是稍微好点？</p>
+
+<p>如果不这样还有其他奇怪的百度知道的提问加上你的名字乱入搜索结果。<br>
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 18, 2018 11:38 PM">2018年6月18日 23:38</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389877">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用焦某的这条留言" onclick="return CommentQuote(&#39;comment-quote-389877&#39;,&#39;焦某&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389879" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Uganda</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389879">
+            <p>对this的描述依然抽象, 感觉画了那么多diagram意义不大, 只保留第一部分就好了</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 18, 2018 11:53 PM">2018年6月18日 23:53</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389879">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Uganda的这条留言" onclick="return CommentQuote(&#39;comment-quote-389879&#39;,&#39;Uganda&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389881" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://xubailong.com" href="http://xubailong.com/" target="_blank" rel="nofollow">Sidney</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389881">
+            <p>对 this 的理解又进一步加深，感谢</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2018  1:47 AM">2018年6月19日 01:47</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389881">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Sidney的这条留言" onclick="return CommentQuote(&#39;comment-quote-389881&#39;,&#39;Sidney&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389886" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">阮一峰</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389886">
+            <p>@dc：</p>
+
+<p>谢谢指出，已经改正。<br>
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2018  8:37 AM">2018年6月19日 08:37</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389886">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用阮一峰的这条留言" onclick="return CommentQuote(&#39;comment-quote-389886&#39;,&#39;阮一峰&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389887" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://liantao.me" href="http://liantao.me/" target="_blank" rel="nofollow">练涛</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389887">
+            <p>简洁明了</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2018  9:15 AM">2018年6月19日 09:15</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389887">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用练涛的这条留言" onclick="return CommentQuote(&#39;comment-quote-389887&#39;,&#39;练涛&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389889" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Spike</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389889">
+            <p>分享一篇自己总结的有道笔记：<br>
+<a href="http://note.youdao.com/noteshare?id=b2fab3b044aa90033395df0c8c9ca3a4&amp;sub=6DA85DF56143475588CA9E0F9690FCBE" rel="nofollow">http://note.youdao.com/noteshare?id=b2fab3b044aa90033395df0c8c9ca3a4&amp;sub=6DA85DF56143475588CA9E0F9690FCBE</a></p>
+
+<p>其中主要的内容是这篇文章里的，是我读过的，关于this指向写的最简单的文章了：<br>
+<a href="http://davidshariff.com/blog/javascript-this-keyword/#first-article" rel="nofollow">http://davidshariff.com/blog/javascript-this-keyword/#first-article</a></p>
+
+<p>其中这句话算是精华了吧：<br>
+Whenever a function is called, we must look at the immediate left side of the brackets / parentheses “()”. If on the left side of the parentheses we can see a reference, then the value of “this” passed to the function call is exactly of which that object belongs to, otherwise it is the global object. </p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2018 10:01 AM">2018年6月19日 10:01</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389889">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Spike的这条留言" onclick="return CommentQuote(&#39;comment-quote-389889&#39;,&#39;Spike&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389890" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">fengjiahao</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389890">
+            <p>谢谢阮的分享，作为一个初学者，令我在JavaScript上更容易理解。<br>
+不知道阮是否愿意分享一下计算机的独特见解，最近在了解图灵，自己也有一些对计算机重新的认识，不知道阮在这方面的理解是什么，可能有些冒昧，请谅解</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2018 10:09 AM">2018年6月19日 10:09</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389890">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用fengjiahao的这条留言" onclick="return CommentQuote(&#39;comment-quote-389890&#39;,&#39;fengjiahao&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389892" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://blog.mghio.cn" href="http://blog.mghio.cn/" target="_blank" rel="nofollow">麻贵海</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389892">
+            <p>通俗易懂，非常好</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2018 11:31 AM">2018年6月19日 11:31</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389892">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用麻贵海的这条留言" onclick="return CommentQuote(&#39;comment-quote-389892&#39;,&#39;麻贵海&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389896" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">展翼骐骥</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389896">
+            <p>这什么都没有解释啊。用运行环境解释运行环境。还引出了属性描述对象，但后面又并没有解释任何相关性。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2018 12:05 PM">2018年6月19日 12:05</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389896">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用展翼骐骥的这条留言" onclick="return CommentQuote(&#39;comment-quote-389896&#39;,&#39;展翼骐骥&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389897" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">fisher</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389897">
+            <p>个人理解 this指的是调用者所处的栈的内存地址, 不知是否正确</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2018  1:25 PM">2018年6月19日 13:25</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389897">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用fisher的这条留言" onclick="return CommentQuote(&#39;comment-quote-389897&#39;,&#39;fisher&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389926" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="https://mengjiang1994.github.io/" href="https://mengjiang1994.github.io/" target="_blank" rel="nofollow">William</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389926">
+            <p>可以这么理解么：</p>
+
+<p>说白了就是看具体执行的那一句的作用域:</p>
+
+<p>foo()就是在全局执行<br>
+bar.foo()就是在bar里执行</p>
+
+<p>想起来去年学校里的Java考试在考察继承和多态的时候好像也有类似的知识点 = =</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 20, 2018  8:54 AM">2018年6月20日 08:54</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389926">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用William的这条留言" onclick="return CommentQuote(&#39;comment-quote-389926&#39;,&#39;William&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389928" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Jachin</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389928">
+            <p>很不错，理解了函数和值在内存空间的存在形式。也理解了环境会因不同的赋值而有不同的结果。谢谢</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 20, 2018  9:34 AM">2018年6月20日 09:34</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389928">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Jachin的这条留言" onclick="return CommentQuote(&#39;comment-quote-389928&#39;,&#39;Jachin&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389931" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">我是小白</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389931">
+            <p>我有个建议,希望老师您能在每个网页加一个回到顶部的按钮.这样方便阅读</p>
+
+<p>望采纳，哈哈</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 20, 2018  1:20 PM">2018年6月20日 13:20</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389931">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用我是小白的这条留言" onclick="return CommentQuote(&#39;comment-quote-389931&#39;,&#39;我是小白&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389933" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">zhangjg</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389933">
+            <p>Javascript 是一个文本作用域的语言, 就是说, 一个变量的作用域, 在写这个变量的时候确定. this 关键字是为了在 JS 中加入动态作用域而做的努力. 所谓动态作用域, 就是说变量的作用范围, 是根据函数调用的位置而定的.  从这个角度来理解 this, 就简单的多.</p>
+
+<p>this 是 JS 中的动态作用域机制, 具体来说有四种, 优先级有低到高分别如下:<br>
+1. 默认的 this 绑定, 就是说 在一个函数中使用了 this, 但是没有为 this 绑定对象. 这种情况下, 非严格默认, this 就是全局变量 Node 环境中的 global, 浏览器环境中的 window.<br>
+2. 隐式绑定: 使用 obj.foo() 这样的语法来调用函数的时候, 函数 foo 中的 this 绑定到 obj 对象.<br>
+3. 显示绑定: foo.call(obj, ...), foo.apply(obj,[...]), foo.bind(obj,...)<br>
+4. 构造绑定: new foo() , 这种情况, 无论 foo 是否做了绑定, 都要创建一个新的对象, 然后 foo 中的 this 引用这个对象.</p>
+
+<p>详见: Your Donot Know JS : this &amp; Object </p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 20, 2018  2:34 PM">2018年6月20日 14:34</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389933">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用zhangjg的这条留言" onclick="return CommentQuote(&#39;comment-quote-389933&#39;,&#39;zhangjg&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389955" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">wind</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389955">
+            <p>@zhangjg：</p>
+
+<p>对对，看了  Your Donot Know JS   这本书，恍然大悟。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2018  9:23 AM">2018年6月21日 09:23</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389955">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用wind的这条留言" onclick="return CommentQuote(&#39;comment-quote-389955&#39;,&#39;wind&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389959" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://ZHANGDESHENG.CC" href="http://zhangdesheng.cc/" target="_blank" rel="nofollow">jzds001</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389959">
+            <p>这篇文章，学到了！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2018 10:55 AM">2018年6月21日 10:55</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389959">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用jzds001的这条留言" onclick="return CommentQuote(&#39;comment-quote-389959&#39;,&#39;jzds001&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389963" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://linux265.com" href="http://linux265.com/" target="_blank" rel="nofollow">linux265</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389963">
+            <p>谢谢分享,通俗易懂,直观明了!赞一个!</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2018 12:15 PM">2018年6月21日 12:15</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389963">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用linux265的这条留言" onclick="return CommentQuote(&#39;comment-quote-389963&#39;,&#39;linux265&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389966" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="https://www.jimokanshu.com/" href="https://www.jimokanshu.com/" target="_blank" rel="nofollow">寂寞看书</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389966">
+            <blockquote>
+<pre>引用zhangjg的发言：</pre>
+
+<p>Javascript 是一个文本作用域的语言, 就是说, 一个变量的作用域, 在写这个变量的时候确定. this 关键字是为了在 JS 中加入动态作用域而做的努力. 所谓动态作用域, 就是说变量的作用范围, 是根据函数调用的位置而定的.从这个角度来理解 this, 就简单的多.</p>
+
+<p>this 是 JS 中的动态作用域机制, 具体来说有四种, 优先级有低到高分别如下:<br>
+1. 默认的 this 绑定, 就是说 在一个函数中使用了 this, 但是没有为 this 绑定对象. 这种情况下, 非严格默认, this 就是全局变量 Node 环境中的 global, 浏览器环境中的 window.<br>
+2. 隐式绑定: 使用 obj.foo() 这样的语法来调用函数的时候, 函数 foo 中的 this 绑定到 obj 对象.<br>
+3. 显示绑定: foo.call(obj, ...), foo.apply(obj,[...]), foo.bind(obj,...)<br>
+4. 构造绑定: new foo() , 这种情况, 无论 foo 是否做了绑定, 都要创建一个新的对象, 然后 foo 中的 this 引用这个对象.</p>
+
+<p>详见: Your Donot Know JS : this &amp; Object </p>
+
+</blockquote>
+
+<p>补充一下：严格模式下，默认的this就是undefined了</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2018  3:15 PM">2018年6月21日 15:15</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389966">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用寂寞看书的这条留言" onclick="return CommentQuote(&#39;comment-quote-389966&#39;,&#39;寂寞看书&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389969" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://木有" href="http://xn--8ovpc/" target="_blank" rel="nofollow">Josh</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389969">
+            <p>常来老师的blog，最中意这种简单明了又探究到底的文章，无限个赞！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2018  3:32 PM">2018年6月21日 15:32</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389969">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Josh的这条留言" onclick="return CommentQuote(&#39;comment-quote-389969&#39;,&#39;Josh&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389970" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://www.ty0924.cn" href="http://www.ty0924.cn/" target="_blank" rel="nofollow">汤钺</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389970">
+            <p>感谢您的指导。感谢。看了几年，第一次回复！<br>
+谢谢～</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2018  3:44 PM">2018年6月21日 15:44</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389970">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用汤钺的这条留言" onclick="return CommentQuote(&#39;comment-quote-389970&#39;,&#39;汤钺&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-389997" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">wangyq</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-389997">
+            <p>感谢老师的指导。从入行就在看您的文章,谢谢~</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 21, 2018 10:44 PM">2018年6月21日 22:44</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-389997">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用wangyq的这条留言" onclick="return CommentQuote(&#39;comment-quote-389997&#39;,&#39;wangyq&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390065" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Yang</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390065">
+            <p><strong>谢谢阮老师分享<strong></strong></strong></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 22, 2018  5:53 PM">2018年6月22日 17:53</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390065">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Yang的这条留言" onclick="return CommentQuote(&#39;comment-quote-390065&#39;,&#39;Yang&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390073" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">eeeecw(谁能给我个实习)</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390073">
+            <p>简单概括起来：this指向当前环境。<br>
+当js运行起来，会有一个大环境，直接使用函数，this会指向当前大环境。this.x就会在大环境中找x。<br>
+对象会带有小环境，所以，对象中的this.x会去寻找小环境中的x。<br>
+结论：有对象就是不一样～～～</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 22, 2018  9:36 PM">2018年6月22日 21:36</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390073">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用eeeecw(谁能给我个实习)的这条留言" onclick="return CommentQuote(&#39;comment-quote-390073&#39;,&#39;eeeecw(谁能给我个实习)&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390088" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">清泉</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390088">
+            <p>阮老师，加油~</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 23, 2018  9:36 AM">2018年6月23日 09:36</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390088">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用清泉的这条留言" onclick="return CommentQuote(&#39;comment-quote-390088&#39;,&#39;清泉&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390106" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">DirtyLate</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390106">
+            <p>函数在定义的时候，解释器已经把当前的环境和函数一起打包保存起来了吧，所以才说函数有词法作用域啰。至于像 obj.foo() 这种对象调用函数的语法，无非就是 obj.foo(obj)的语法糖了吧, 如果是直接 foo() 这样函数调用，没有传this引用，函数体在执行时就只好从定义时打包的环境中找了，找不到就一层一层往上找，直到顶层发现this代表window对象，就用window啰。<br>
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 23, 2018  4:46 PM">2018年6月23日 16:46</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390106">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用DirtyLate的这条留言" onclick="return CommentQuote(&#39;comment-quote-390106&#39;,&#39;DirtyLate&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390145" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">ceido</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390145">
+            <blockquote>
+<pre>引用展翼骐骥的发言：</pre>
+
+<p>这什么都没有解释啊。用运行环境解释运行环境。还引出了属性描述对象，但后面又并没有解释任何相关性。</p>
+
+</blockquote>
+
+<p>我也是这样觉得，一开始就说“这种解释没错，但是教科书往往不告诉你，为什么会这样？”，然后讲了怎么存。就到了再后面“上面代码中，函数体里面的this.x就是指当前运行环境的x。”，“上面代码中，函数f在全局环境执行，this.x指向全局环境的x。”...</p>
+
+<p>这不也是和“往往不告诉你，为什么会这样？”一样吗？根本没讲原理什么的。肯定通俗易懂啊。。。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 24, 2018  8:31 PM">2018年6月24日 20:31</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390145">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用ceido的这条留言" onclick="return CommentQuote(&#39;comment-quote-390145&#39;,&#39;ceido&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390180" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://openhome.cc" href="http://openhome.cc/" target="_blank" rel="nofollow">良葛格</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390180">
+            <p>我沒有看過 JavaScript 實作，如果作者是看過 JavaScript 實作寫了這篇，那表示 JavaScript 的 this 就是保存環境物件，而不是實例（Instance），而且 this 環境物件與實例在存取上具有相同的介面，這樣就不用區別兩者的不同。</p>
+
+<p>也就難怪沒有 dot 運算子的時候，this 會是指向全域，因為這時一定是頂層的環境物件。</p>
+
+<p>我在實現 ToyLang（https://github.com/JustinSDK/toy_lang） 時的作法不同，使用了函式本身保存環境物件，至於 this，單純就當成函式的隱含參數，若是透過 dot 運算子，在呼叫函式時會將 dot 左邊的物件當成是隱含的引數，因此，當函式不透過 dot 運算子時，是不會有 this 的，也就不會有指向全域的問題。</p>
+
+<p>JavaScript 的作法在好處之一，是實現 Closure 時比較方便，因為都是在環境物件上查找，我的作法在實現 Closure 時，在目前環境物件上找不到變數時，要繼續在函式的環境物件上查找。</p>
+
+<p>我的作法好處是，理解 this 簡單的多，它就是函式隱含的參數罷了，只有在使用 dot 運算時才會有這個參數，也沒有必須區別是否指向全域的問題 … XD</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 26, 2018  8:24 AM">2018年6月26日 08:24</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390180">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用良葛格的这条留言" onclick="return CommentQuote(&#39;comment-quote-390180&#39;,&#39;良葛格&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390204" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">joinsec</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390204">
+            <p>感谢老师的分享，对this的本质了解又加深一步了</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 26, 2018 11:31 AM">2018年6月26日 11:31</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390204">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用joinsec的这条留言" onclick="return CommentQuote(&#39;comment-quote-390204&#39;,&#39;joinsec&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390206" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">joinsec</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390206">
+            <p>您好，有一个疑问，foo中的value写的是指向函数的地址，那么指向箭头是不是应该由value：函数的地址　---&gt; function(){console.log(this.x)}</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 26, 2018 11:35 AM">2018年6月26日 11:35</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390206">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用joinsec的这条留言" onclick="return CommentQuote(&#39;comment-quote-390206&#39;,&#39;joinsec&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390256" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">popo</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390256">
+            <p>正巧看到一片类似的文章和大家分享下。</p>
+
+<p>Understanding JavaScript Function Invocation and "this"<br>
+<a href="https://yehudakatz.com/2011/08/11/understanding-javascript-function-invocation-and-this/" rel="nofollow">https://yehudakatz.com/2011/08/11/understanding-javascript-function-invocation-and-this/</a></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 27, 2018 10:38 AM">2018年6月27日 10:38</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390256">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用popo的这条留言" onclick="return CommentQuote(&#39;comment-quote-390256&#39;,&#39;popo&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390275" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="https://oomake.com/" href="https://oomake.com/" target="_blank" rel="nofollow">码客</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390275">
+            <p>充分体现了JavaScript的博大精深，还是像这样剖析起来才容易理解</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 27, 2018 12:21 PM">2018年6月27日 12:21</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390275">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用码客的这条留言" onclick="return CommentQuote(&#39;comment-quote-390275&#39;,&#39;码客&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390511" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">bosens</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390511">
+            <p>感谢分享,不过老师你在上面引用描述对象的时候为什么要用两个[[]]嵌套使用</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  3, 2018  9:03 PM">2018年7月 3日 21:03</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390511">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用bosens的这条留言" onclick="return CommentQuote(&#39;comment-quote-390511&#39;,&#39;bosens&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390518" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">lofayo</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390518">
+            <p>结合你的图，附上作用域链的思想应该可以理解了！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  4, 2018  5:32 AM">2018年7月 4日 05:32</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390518">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用lofayo的这条留言" onclick="return CommentQuote(&#39;comment-quote-390518&#39;,&#39;lofayo&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390542" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://liwuhou.xyz" href="http://liwuhou.xyz/" target="_blank" rel="nofollow">阿五</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390542">
+            <p>啊，我明白了，感谢阮大</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  4, 2018 11:12 PM">2018年7月 4日 23:12</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390542">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用阿五的这条留言" onclick="return CommentQuote(&#39;comment-quote-390542&#39;,&#39;阿五&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390545" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://www.lasy.site" href="http://www.lasy.site/" target="_blank" rel="nofollow">Lasy</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390545">
+            <p>&gt;this指向所在环境或者调用它的对象。<br>
+这是最常见的解释，但是好像并不准确，因为它并不能解释下面的例子：<br>
+```<br>
+var value = 1;</p>
+
+<p>var foo = {<br>
+  value: 2,<br>
+  bar: function () {<br>
+    return this.value;<br>
+  }<br>
+}<br>
+console.log((false || foo.bar)()); // 1<br>
+```</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  5, 2018  8:43 AM">2018年7月 5日 08:43</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390545">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Lasy的这条留言" onclick="return CommentQuote(&#39;comment-quote-390545&#39;,&#39;Lasy&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390557" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Chess</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390557">
+            <p>感觉什么都没有解释</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  5, 2018  7:37 PM">2018年7月 5日 19:37</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390557">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Chess的这条留言" onclick="return CommentQuote(&#39;comment-quote-390557&#39;,&#39;Chess&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390595" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">cris Liu</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390595">
+            <p>没想到2018年了阮老师还在讲述this的知识<br>
+只可惜老师讲得还是和我之前所了解得并无太大差别</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  7, 2018  2:58 AM">2018年7月 7日 02:58</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390595">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用cris Liu的这条留言" onclick="return CommentQuote(&#39;comment-quote-390595&#39;,&#39;cris Liu&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390614" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="https://github.com/sgiyy" href="https://github.com/sgiyy" target="_blank" rel="nofollow">sgiyy</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390614">
+            <p>@Lasy：</p>
+
+<p>个人看法：<br>
+`(false || foo.bar)()`，这条执行语句可以分步理解。<br>
+let step_1 = foo.bar; // 把 foo.bar 方法赋值给 step_1；<br>
+let step_2 = step_1()； // 此时 step_1 作为一个普通函数执行，this 指向 window</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  7, 2018 10:20 PM">2018年7月 7日 22:20</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390614">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用sgiyy的这条留言" onclick="return CommentQuote(&#39;comment-quote-390614&#39;,&#39;sgiyy&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390671" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">dreamsline</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390671">
+            <p>总结：由于函数是一个单独的值，所以它可以在不同的环境（上下文）执行。JavaScript 允许在函数体内部，引用当前环境的其他变量。而为了获得当前的运行环境，所以this就出现了，因此函数里面的this函数当前的运行环境。开头提出的问题，obj.foo()是通过obj找到foo（这时，引擎会将函数单独保存在内存中，然后再将函数的地址赋值给foo属性的value属性），所以就是在obj环境执行。一旦var foo = obj.foo，变量foo就直接指向函数本身，所以foo()就变成在全局环境执行。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  9, 2018 12:13 AM">2018年7月 9日 00:13</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390671">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用dreamsline的这条留言" onclick="return CommentQuote(&#39;comment-quote-390671&#39;,&#39;dreamsline&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390820" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">落风</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390820">
+            <p>一句话：this 总是指向调用它所在的函数的那个对象</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July 11, 2018  7:45 PM">2018年7月11日 19:45</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390820">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用落风的这条留言" onclick="return CommentQuote(&#39;comment-quote-390820&#39;,&#39;落风&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390834" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Joker</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390834">
+            <p>一直没想明白的是，为什么函数的设计中，要使用隐式的this，如果函数中调用非参数的变量的时候，显示使用this会不会使开发者能够更加清晰的知道函数引用的变量的上下文是哪个</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July 12, 2018 10:16 AM">2018年7月12日 10:16</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390834">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Joker的这条留言" onclick="return CommentQuote(&#39;comment-quote-390834&#39;,&#39;Joker&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-390849" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">vito</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-390849">
+            <p>当前所运行的环境，一句话点醒！！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July 12, 2018 11:22 PM">2018年7月12日 23:22</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-390849">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用vito的这条留言" onclick="return CommentQuote(&#39;comment-quote-390849&#39;,&#39;vito&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-391308" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">tqing</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-391308">
+            <p>但是如果使用lambda表达式，如var obj = {foo:()=&gt;{console.log(this.bar)},bar:1} ，那么在global调用obj.foo()的时候this就指向全局，返回2了……</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July 23, 2018  5:51 PM">2018年7月23日 17:51</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-391308">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用tqing的这条留言" onclick="return CommentQuote(&#39;comment-quote-391308&#39;,&#39;tqing&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-391621" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">任超nice</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-391621">
+            <p>你用通俗易懂的方式解释this,大神</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July 30, 2018  5:06 PM">2018年7月30日 17:06</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-391621">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用任超nice的这条留言" onclick="return CommentQuote(&#39;comment-quote-391621&#39;,&#39;任超nice&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-391965" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">sll</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-391965">
+            <p>var obj = {<br>
+  foo: function () { console.log(this.bar) },<br>
+  boo: function () { console.log(bar) },<br>
+  bar: 1<br>
+};<br>
+ <br>
+var bar = 2;<br>
+  <br>
+obj.foo() //1<br>
+ <br>
+obj.boo()  //2  想请教这个结果为啥是2啊</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August  9, 2018 11:22 AM">2018年8月 9日 11:22</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-391965">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用sll的这条留言" onclick="return CommentQuote(&#39;comment-quote-391965&#39;,&#39;sll&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-391972" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">small</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-391972">
+            <p>@Lasy：</p>
+
+<p>因为这里console.log((false || foo.bar)())相当于执行(function () {<br>
+return this.value;<br>
+})()</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August  9, 2018  6:31 PM">2018年8月 9日 18:31</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-391972">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用small的这条留言" onclick="return CommentQuote(&#39;comment-quote-391972&#39;,&#39;small&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-392139" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">诺顿</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-392139">
+            <blockquote>
+<pre>引用sll的发言：</pre>
+
+<p>var obj = {<br>
+foo: function () { console.log(this.bar) },<br>
+boo: function () { console.log(bar) },<br>
+bar: 1<br>
+};<br>
+ <br>
+var bar = 2;</p>
+
+<p>obj.foo() //1<br>
+ <br>
+obj.boo()//2想请教这个结果为啥是2啊</p>
+
+</blockquote>
+
+<p>因为只有一个变量bar，它的值是2</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 13, 2018  5:18 PM">2018年8月13日 17:18</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-392139">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用诺顿的这条留言" onclick="return CommentQuote(&#39;comment-quote-392139&#39;,&#39;诺顿&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-392247" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Reacher</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-392247">
+            <p>Hi, 一峰<br>
+this 是一个 reference , 应该在栈内存中存放把, 指向堆内存中的实例对象~</p>
+
+<p>1. <a href="https://stackoverflow.com/questions/51223872/this-keyword-in-stack-or-heap" rel="nofollow">https://stackoverflow.com/questions/51223872/this-keyword-in-stack-or-heap</a></p>
+
+<p>2. <a href="https://stackoverflow.com/questions/29472208/this-keyword-working-mechanism-in-java" rel="nofollow">https://stackoverflow.com/questions/29472208/this-keyword-working-mechanism-in-java</a></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 16, 2018  9:40 PM">2018年8月16日 21:40</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-392247">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Reacher的这条留言" onclick="return CommentQuote(&#39;comment-quote-392247&#39;,&#39;Reacher&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-392511" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">SRE</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-392511">
+            <p>非常感谢，对this的理解更深了</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 25, 2018 12:00 AM">2018年8月25日 00:00</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-392511">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用SRE的这条留言" onclick="return CommentQuote(&#39;comment-quote-392511&#39;,&#39;SRE&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-393050" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">木木彡</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-393050">
+            <blockquote>
+<pre>引用sll的发言：</pre>
+
+<p>var obj = {<br>
+foo: function () { console.log(this.bar) },<br>
+boo: function () { console.log(bar) },<br>
+bar: 1<br>
+};<br>
+ <br>
+var bar = 2;</p>
+
+<p>obj.foo() //1<br>
+ <br>
+obj.boo()//2想请教这个结果为啥是2啊</p>
+
+</blockquote>
+
+<p></p>
+
+<p>谁调用指向谁</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September 11, 2018  3:55 PM">2018年9月11日 15:55</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-393050">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用木木彡的这条留言" onclick="return CommentQuote(&#39;comment-quote-393050&#39;,&#39;木木彡&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-393340" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://无" href="http://xn--rgv/" target="_blank" rel="nofollow">陈独秀</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-393340">
+            <p>棒啊，这么一想又是一种新的思路。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September 21, 2018 10:15 PM">2018年9月21日 22:15</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-393340">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用陈独秀的这条留言" onclick="return CommentQuote(&#39;comment-quote-393340&#39;,&#39;陈独秀&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-393693" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">thanksforhappy</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-393693">
+            <p>要是念头不通达，就这么想：</p>
+
+<p>函数f，首先把f当作对象来搞，“调用对象”的写法是这样子的： f.call(e, para1, para2)<br>
+把这个e就当作是“环境变量”吧。又给这个“环境变量”起个别名叫this。<br>
+其次，把f当作函数来搞：认为函数调用f(para1, para2)只不过是f.call(global, para1, para2)的语法糖，那this就是global<br>
+obj.f(para1, para2)只不过是f.call(obj, para1, para2)的语法糖，那this就是obj</p>
+
+<p><br>
+暗暗对自己（不要对别人）说，js中根本没有函数调用，只有“对象调用”，函数调用只是迎合其它语言的习惯写法搞的语法糖。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="October  5, 2018  8:13 PM">2018年10月 5日 20:13</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-393693">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用thanksforhappy的这条留言" onclick="return CommentQuote(&#39;comment-quote-393693&#39;,&#39;thanksforhappy&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-394063" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://xiechengbo.github.io" href="https://xiechengbo.github.io/" target="_blank" rel="nofollow">chengbo</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-394063">
+            <p>非常感谢阮大神的讲解，自己跟着总结了一下</p>
+
+<p><a href="https://xiechengbo.github.io/2018/10/15/%E8%BD%BB%E6%9D%BE%E6%90%9E%E5%AE%9Ajavascript%E4%B8%ADthis%E6%8C%87%E5%90%91/" rel="nofollow">https://xiechengbo.github.io/2018/10/15/%E8%BD%BB%E6%9D%BE%E6%90%9E%E5%AE%9Ajavascript%E4%B8%ADthis%E6%8C%87%E5%90%91/</a></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="October 16, 2018  1:02 AM">2018年10月16日 01:02</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-394063">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用chengbo的这条留言" onclick="return CommentQuote(&#39;comment-quote-394063&#39;,&#39;chengbo&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-394431" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">baizhou</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-394431">
+            <p>阮老师，我在vc code中执行了你的这段代码<br>
+var f = function () {<br>
+    console.log(this.x);<br>
+  }<br>
+  <br>
+  var x = 1;<br>
+  var obj = {<br>
+    f: f,<br>
+    x: 2,<br>
+  };<br>
+  <br>
+  // 单独执行<br>
+  f() // 1<br>
+  <br>
+  // obj 环境执行<br>
+  obj.f() // 2 </p>
+
+<p>f()输出的是undefiend</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="October 26, 2018  2:13 PM">2018年10月26日 14:13</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-394431">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用baizhou的这条留言" onclick="return CommentQuote(&#39;comment-quote-394431&#39;,&#39;baizhou&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-394720" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">于_台</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-394720">
+            <p>阮老师好，<br>
+三、函数<br>
+这张图片,value中是地址，地址指向内存中的函数，所以这个箭头调转个方向是不是好一点。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November  5, 2018 10:40 AM">2018年11月 5日 10:40</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-394720">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用于_台的这条留言" onclick="return CommentQuote(&#39;comment-quote-394720&#39;,&#39;于_台&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-395006" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">fallenink</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-395006">
+            <blockquote>
+<pre>引用Reacher的发言：</pre>
+
+<p>Hi, 一峰<br>
+this 是一个 reference , 应该在栈内存中存放把, 指向堆内存中的实例对象~</p>
+
+<p>1. <a href="https://stackoverflow.com/questions/51223872/this-keyword-in-stack-or-heap" rel="nofollow">https://stackoverflow.com/questions/51223872/this-keyword-in-stack-or-heap</a></p>
+
+<p>2. <a href="https://stackoverflow.com/questions/29472208/this-keyword-working-mechanism-in-java" rel="nofollow">https://stackoverflow.com/questions/29472208/this-keyword-working-mechanism-in-java</a></p>
+
+</blockquote>
+
+<p>你说的是理解this的重点</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November 15, 2018 11:57 AM">2018年11月15日 11:57</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-395006">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用fallenink的这条留言" onclick="return CommentQuote(&#39;comment-quote-395006&#39;,&#39;fallenink&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-395070" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">iuuan</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-395070">
+            <blockquote>
+<pre>引用sll的发言：</pre>
+
+<p>var obj = {<br>
+foo: function () { console.log(this.bar) },<br>
+boo: function () { console.log(bar) },<br>
+bar: 1<br>
+};<br>
+ <br>
+var bar = 2;</p>
+
+<p>obj.foo() //1<br>
+ <br>
+obj.boo()//2想请教这个结果为啥是2啊</p>
+
+</blockquote>
+
+<p>因为只定义了一个值为2的bar，你把var语句删掉后第二个输出会报错，控制台输出“bat is not defined”</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November 16, 2018  3:21 PM">2018年11月16日 15:21</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-395070">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用iuuan的这条留言" onclick="return CommentQuote(&#39;comment-quote-395070&#39;,&#39;iuuan&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-395458" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">iggy</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-395458">
+            <p>如果能添加在回调函数中this的例子就更好了</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November 23, 2018  1:36 PM">2018年11月23日 13:36</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-395458">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用iggy的这条留言" onclick="return CommentQuote(&#39;comment-quote-395458&#39;,&#39;iggy&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-398415" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">rdd</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-398415">
+            <p>学过c++，更加方便理解。<br>
+c++里，类方法的第一个参数就是this。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="December 23, 2018 11:22 PM">2018年12月23日 23:22</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-398415">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用rdd的这条留言" onclick="return CommentQuote(&#39;comment-quote-398415&#39;,&#39;rdd&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-401585" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://marszm.cn" href="http://marszm.cn/" target="_blank" rel="nofollow">Marszm</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-401585">
+            <p>这个只是解释一下吧。。。感觉和原理还是有些差距。。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="January  7, 2019  3:06 PM">2019年1月 7日 15:06</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-401585">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Marszm的这条留言" onclick="return CommentQuote(&#39;comment-quote-401585&#39;,&#39;Marszm&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-408309" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">choukin</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-408309">
+            <p>环境是不是可以理解为内存地址</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="February 20, 2019  1:52 PM">2019年2月20日 13:52</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-408309">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用choukin的这条留言" onclick="return CommentQuote(&#39;comment-quote-408309&#39;,&#39;choukin&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-408643" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">郑春晖</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-408643">
+            <p>大神受我一拜</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="February 24, 2019  9:59 PM">2019年2月24日 21:59</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-408643">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用郑春晖的这条留言" onclick="return CommentQuote(&#39;comment-quote-408643&#39;,&#39;郑春晖&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-408652" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">琳达魔王</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-408652">
+            <p>在刚接触js不久就开始慢慢去理解this的含义。最近在复习导航栏的代码时又遇到了。才感觉函数引用this是很重要的。<br>
+ ...<br>
+栏目1<br>
+栏目2<br>
+栏目3<br>
+...<br>
+<br>
+  var spanList=document.getElementsByTagName('span');<br>
+  for(var i=0; i
+   spanList[i].index=i; //对每个span元素添加属性<br>
+   spanList[i].onclick=function(){    //为每个span添加点击事件<br>
+     for(var j=0; j
+              spanList[j].className=""; //<br>
+             } <br>
+     this.className='showNr'+this.index   <br>
+    //第一次看代码不明白为啥不用spanList[i].className ， 这里定义和阐明的是一个点击事件引起的函数，所以每次<br>
+   //点击span，函数的作用域都在变化，this的作用就体现出来。<br>
+   }<br>
+}<br>
+<br>
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="February 24, 2019 11:26 PM">2019年2月24日 23:26</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-408652">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用琳达魔王的这条留言" onclick="return CommentQuote(&#39;comment-quote-408652&#39;,&#39;琳达魔王&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-408790" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">甚时跃马归来</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-408790">
+            <p>去年下半年看这一篇看到属性描述对象（也就是属性的4个特征）的时候还一脸蒙蔽，最近订阅了winter的专栏，看的时候就明白了许多。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="February 25, 2019 10:58 AM">2019年2月25日 10:58</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-408790">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用甚时跃马归来的这条留言" onclick="return CommentQuote(&#39;comment-quote-408790&#39;,&#39;甚时跃马归来&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-410019" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">123</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-410019">
+            <p>看了好几个小时才看懂，例子那个图啊 实在是不敢恭维，但还是感谢</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="March 20, 2019  2:05 PM">2019年3月20日 14:05</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-410019">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用123的这条留言" onclick="return CommentQuote(&#39;comment-quote-410019&#39;,&#39;123&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-410111" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Jokie</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-410111">
+            <p>文章很好，可是看完之后还有一个关键疑问就是怎么判断一个函数所处的运行环境</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="March 23, 2019  3:32 PM">2019年3月23日 15:32</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-410111">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Jokie的这条留言" onclick="return CommentQuote(&#39;comment-quote-410111&#39;,&#39;Jokie&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-410261" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://wu" href="http://wu/" target="_blank" rel="nofollow">CAT</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-410261">
+            <p>一旦var foo = obj.foo，变量foo就直接指向函数本身，所以foo()就变成在全局环境执行。 为什么变量foo直接指向函数本身，foo（）就变成全局环境执行</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="March 29, 2019  5:01 PM">2019年3月29日 17:01</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-410261">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用CAT的这条留言" onclick="return CommentQuote(&#39;comment-quote-410261&#39;,&#39;CAT&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-410944" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">aaron</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-410944">
+            <p>关于这个MDN中的对象一节有说明： <strong>关键字"this"指向了当前代码运行时的对象( 原文：the current object the code is being written inside )</strong></p>
+
+<p><br><br>
+链接: <strong><a href="https://developer.mozilla.org/zh-CN/docs/Learn/JavaScript/Objects/Basics" rel="nofollow">https://developer.mozilla.org/zh-CN/docs/Learn/JavaScript/Objects/Basics</a></strong></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="April 28, 2019  5:46 PM">2019年4月28日 17:46</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-410944">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用aaron的这条留言" onclick="return CommentQuote(&#39;comment-quote-410944&#39;,&#39;aaron&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-411032" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">fds</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-411032">
+            <p>this在回调函数里面的应用呢？？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="May  6, 2019  9:52 PM">2019年5月 6日 21:52</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-411032">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用fds的这条留言" onclick="return CommentQuote(&#39;comment-quote-411032&#39;,&#39;fds&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-411039" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">field</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-411039">
+            <p>我用node 测试，得到的结果是1和undefined。<br>
+</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="May  7, 2019  3:03 PM">2019年5月 7日 15:03</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-411039">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用field的这条留言" onclick="return CommentQuote(&#39;comment-quote-411039&#39;,&#39;field&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-411804" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Nan</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-411804">
+            <p>此图片有误  value 应等于2<br>
+<a href="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/bg2018061804.png" rel="nofollow">https://www.wangbase.com/blogimg/asset/201806/bg2018061804.png</a></p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="June 19, 2019  4:02 AM">2019年6月19日 04:02</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-411804">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Nan的这条留言" onclick="return CommentQuote(&#39;comment-quote-411804&#39;,&#39;Nan&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-412117" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author"><a title="http://暂无" href="http://xn--rgvyn/" target="_blank" rel="nofollow">开朗与情敌</a></span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-412117">
+            <p>老师的讲解很吸引我，赞</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July  9, 2019  9:52 AM">2019年7月 9日 09:52</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-412117">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用开朗与情敌的这条留言" onclick="return CommentQuote(&#39;comment-quote-412117&#39;,&#39;开朗与情敌&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-412571" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Mike</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-412571">
+            <p>其实就是 javascript 语言太不严谨导致的问题，历史原因！</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August  5, 2019 11:36 AM">2019年8月 5日 11:36</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-412571">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Mike的这条留言" onclick="return CommentQuote(&#39;comment-quote-412571&#39;,&#39;Mike&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-413788" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">陈旭鑫</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-413788">
+            <p>前辈。请问请问，在函数内一直使用箭头函数，让this指向当前函数好还是先将this保存为_this再去使用好呢。this是怎么生成的呢，是this.xx一次就检查一下this属于谁吗，重复使用this.xx和_this.xx这俩谁好啊。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="September 30, 2019 10:06 AM">2019年9月30日 10:06</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-413788">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用陈旭鑫的这条留言" onclick="return CommentQuote(&#39;comment-quote-413788&#39;,&#39;陈旭鑫&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-417898" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">alekye</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-417898">
+            <p>请问阮老师，这些知识点是在哪里看到的？请赐教</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="April 23, 2020  8:20 AM">2020年4月23日 08:20</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-417898">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用alekye的这条留言" onclick="return CommentQuote(&#39;comment-quote-417898&#39;,&#39;alekye&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-420703" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">雷霆崖售楼部经理</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-420703">
+            <p>对于箭头函数改变this指针的问题好像没有在这个里面提到。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="July 26, 2020  3:27 PM">2020年7月26日 15:27</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-420703">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用雷霆崖售楼部经理的这条留言" onclick="return CommentQuote(&#39;comment-quote-420703&#39;,&#39;雷霆崖售楼部经理&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-421243" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">hjk0820</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-421243">
+            <p>最后两张图里面的函数是‘f’不是‘foo’吧</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 11, 2020 11:39 AM">2020年8月11日 11:39</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-421243">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用hjk0820的这条留言" onclick="return CommentQuote(&#39;comment-quote-421243&#39;,&#39;hjk0820&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-423626" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">Cary</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-423626">
+            <p>我想说 这个这个措辞是不是不太准确，我无数次以为这个运行环境就是执行栈概念中的执行上下文。阮神是不是要更新一下这文章了。</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="November  3, 2020  1:15 PM">2020年11月 3日 13:15</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-423626">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用Cary的这条留言" onclick="return CommentQuote(&#39;comment-quote-423626&#39;,&#39;Cary&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-424515" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">刘源</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-424515">
+            <p>let obj={<br>
+	funs(){<br>
+		let fun2=function(){console.log(this)} //window<br>
+		fun2()<br>
+	}<br>
+}<br>
+obj.funs()<br>
+为什么这种情况下this会指向全局对象不指向 obj呢 不是在obj环境运行的吗?</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="December 26, 2020 12:00 AM">2020年12月26日 00:00</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-424515">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用刘源的这条留言" onclick="return CommentQuote(&#39;comment-quote-424515&#39;,&#39;刘源&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-424989" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">少佳君</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-424989">
+            <p>foo不是函数，还能foo()？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="January 14, 2021  3:03 PM">2021年1月14日 15:03</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-424989">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用少佳君的这条留言" onclick="return CommentQuote(&#39;comment-quote-424989&#39;,&#39;少佳君&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-425595" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">超级大名</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-425595">
+            <p>图画得高大上的，但通篇看了两遍下来，确实没有回答“函数的运行环境到底是怎么决定的？”这个问题。。。</p>
+
+<p>文章中，<br>
+第三部分，“由于函数是一个单独的值，所以它可以在不同的环境（上下文）执行。”——嗯，没解释运行环境是怎么决定的。<br>
+第四部分，“上面代码中，函数f在全局环境执行，this.x指向全局环境的x”——陈述了事实，还是没解释为什么。<br>
+      “obj.foo()是通过obj找到foo，所以就是在obj环境执行。一旦var foo = obj.foo，变量foo就直接指向函数本身，所以foo()就变成在全局环境执行。”——哈？！这是结论还是解释？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="February 24, 2021  5:55 PM">2021年2月24日 17:55</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-425595">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用超级大名的这条留言" onclick="return CommentQuote(&#39;comment-quote-425595&#39;,&#39;超级大名&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-426169" class="comment">
+    <div class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">一阵小凉风</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-426169">
+            <p>为什么函数要放在栈中，才能在不同的上下文中执行，哪位大神可以解释下？</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="April  1, 2021  9:15 AM">2021年4月 1日 09:15</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-426169">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用一阵小凉风的这条留言" onclick="return CommentQuote(&#39;comment-quote-426169&#39;,&#39;一阵小凉风&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    
+        
+        <div id="comment-429014" class="comment">
+    <div id="comment-last" class="inner">
+        <div class="comment-header">
+            <div class="asset-meta">
+<p>
+                <span class="byline">
+                    
+
+                    <span class="vcard author">kk</span>
+
+ 说：
+                </span>
+</p>
+            </div>
+        </div>
+        <div class="comment-content" id="comment-quote-429014">
+            <blockquote>
+<pre>引用165692640的发言：</pre>
+
+<p>文中讲到 “环境” ，我脑中浮现的是“调用者级级别”或者“调用者所在的栈层”</p>
+
+</blockquote>
+
+<p>说的非常的好,实际上我认为可以抛开所谓的"全局环境"还是"局部环境".根据调用的栈层来理解,基本可以抛开一切表象上的陷阱,直指this的指向<br>
+掌握好this的指向问题,是JS开发者进阶的明显标志</p>
+        </div>
+<div class="comment-footer">
+<div class="comment-footer-inner">
+<p>
+                   <abbr class="published" title="August 24, 2021  3:22 PM">2021年8月24日 15:22</abbr>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-429014">#</a>
+ | <a href="https://www.ruanyifeng.com/blog/2018/06/javascript-this.html#comment-text" title="引用kk的这条留言" onclick="return CommentQuote(&#39;comment-quote-429014&#39;,&#39;kk&#39;);">引用</a>
+</p>
+</div>
+</div>
+    </div>
+</div>
+        
+    </div>
+        
+    
+
+
+    
+    
+    <div class="comments-open" id="comments-open">
+        <h2 class="comments-open-header">我要发表看法</h2>
+        <div class="comments-open-content">
+
+        
+            <div id="comment-greeting"></div>
+
+            <form method="post" action="https://www.ruanyifeng.com/cgi-bin/mtos/mt-comments.cgi" name="comments_form" id="comments-form" onsubmit="return pleaseWait();">
+                <input type="hidden" name="static" value="1">
+                <input type="hidden" name="entry_id" value="1993">
+                <input type="hidden" name="__lang" value="en">
+                <input type="hidden" name="parent_id" value="" id="comment-parent-id">
+                <input type="hidden" name="armor" value="1">
+                <input type="hidden" name="preview" value="">
+                <input type="hidden" name="sid" value="">
+                <div id="comments-open-data">
+            <div id="comments-open-text">
+                    <p><label for="comment-text">您的留言
+                    （HTML标签部分可用）</label></p>
+                    <p><textarea id="comment-text" name="text" rows="10" cols="50"></textarea></p>
+                </div>
+                    <div id="comment-form-name">
+                        <p><label for="comment-author">您的大名：</label></p>
+                        <p><input id="comment-author" name="author" size="30" value="">  <span class="hint"> «-必填</span></p>
+                    </div>
+                    <div id="comment-form-email">
+                        <p><label for="comment-email">电子邮件：</label></p>
+                        <p><input id="comment-email" name="email" size="30" value="">  <span class="hint"> «-必填，不公开</span></p>
+                    </div>
+                    <div id="comment-form-url">
+                        <p><label for="comment-url">个人网址：</label></p>
+                        <p><input id="comment-url" name="url" size="30" value="">  <span class="hint"> «-我信任你，不会填写广告链接</span></p>
+                    </div>
+                    <div id="comment-form-remember-me">
+                        <p>
+                        <label for="comment-bake-cookie">记住个人信息？</label><input type="checkbox" id="comment-bake-cookie" name="bakecookie" onclick="!this.checked?forgetMe(document.comments_form):rememberMe(document.comments_form)" value="1" accesskey="r"></p>
+                    </div>
+                </div>
+                    <div id="comment-form-reply" style="display:none">
+                    <input type="checkbox" id="comment-reply" name="comment_reply" value="" onclick="mtSetCommentParentID()">
+                    <label for="comment-reply" id="comment-reply-label"></label>
+                </div>
+                <div id="comments-open-captcha"></div>
+                <div id="comments-open-footer">
+<div id="wait" style="display:none;">
+<p><strong>正在发表您的评论，请稍候</strong></p>
+<p>
+<input type="text" name="percent" size="3" style="font-family:Arial; color:black;text-align:center; border-width:medium; border-style:none;">           
+<input type="text" name="chart" size="46" style="font-family:Arial;font-weight:bolder; color:black; padding:0px; border-style:none;">
+</p>
+</div>
+
+                    <p><input type="submit" accesskey="s" name="post" id="comment-submit" value="发表">  <span class="hint"> «- 点击按钮</span></p>
+                </div>
+            </form>
+
+
+        </div>
+    </div>
+
+    
+
+
+</div>
+
+
+
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        <script type="text/javascript" src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/prism.js.下载"></script>
+        <script type="text/javascript" src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/checker.js.下载"></script> 
+            <div id="footer">
+<div id="footer-inner">
+  <div id="footer-content">
+
+      
+<!--
+      <section> 
+     </section>
+  <p><a title="Instagram" target="_blank" href="http://instagram.com/ruanyf">Instagram</a></p>
+       <p><a title="订阅" href="https://app.feedblitz.com/f/f.fbz?Sub=348868" target="_blank">邮件订阅</a></p>
+  
+       <h2>Feed</h2>
+       <p><a title="FeedBurner" href="http://feeds.feedburner.com/ruanyifeng" target="_blank">FeedBurner</a></p>
+       <p><a title="atom.xml" href="http://www.ruanyifeng.com/blog/atom.xml" target="_blank">atom.xml</a></p>
+     
+      <p>支付宝：<a title="支付宝" href="alipays://platformapi/startapp?appId=20000067&url=http%3A%2F%2Fwww.ruanyifeng.com%2Fblog" target="_blank">yifeng.ruan@gmail.com</a></p>
+-->
+
+     <section>
+<!--
+       <h2>授权方式</h2>
+       <p><a title="许可证" href="http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh" target="_blank">自由转载-非商用-非衍生-保持署名</a></p>
+       <h2>微信公号</h2>
+       <h2>社交帐号</h2>
+       <h2>联系方式</h2>
+     -->
+       <p><img src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/bg2020013101.jpg" alt="微信扫描"></p>
+       <p>
+         <a title="微博" href="https://weibo.com/ruanyf" target="_blank">Weibo</a> | 
+         <a title="Twitter" target="_blank" href="https://twitter.com/ruanyf">Twitter</a> |
+         <a title="GitHub" target="_blank" href="https://github.com/ruanyf">GitHub</a>
+       </p>
+     
+     <p>Email: <a title="电子邮件" href="mailto:yifeng.ruan@gmail.com" target="_blank">yifeng.ruan@gmail.com</a></p>
+     </section>
+  
+  
+
+
+  </div>
+</div>
+</div>
+<script>
+function insertLine(e,t){for(var n=0;n<t;n++)e.parentNode.insertBefore(document.createElement("p"),e)}function getImg(){if(!window["main-content"])return!1;for(var e,t=Array.prototype.slice.call(window["main-content"].getElementsByTagName("img")),n=0;n<t.length;n++){if("display: none !important;"===(e=t[n]).getAttribute("style"))return e;if(n===t.length-1)return!1}}function toObjectUrl(e,t){return fetch(e).then(e=>e.blob()).then(e=>{t(URL.createObjectURL(e))})}function toDataURL(e,t){var n=new XMLHttpRequest;n.open("get",e),n.responseType="blob",n.onload=function(){var e=new FileReader;e.onload=function(){t(this.result)},e.readAsDataURL(n.response)},n.send()}setTimeout(function(){var e=getImg();e&&(insertLine(e.parentNode,2),toObjectUrl(e.src,function(t){var n=document.createElement("p"),r=document.createElement("img");r.src=t,n.appendChild(r),e.parentNode.parentNode.insertBefore(n,e.parentNode)}))},3e3);
+</script>                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-46829782-1', 'ruanyifeng.com');
+  ga('send', 'pageview');
+
+</script>
+
+<script type="text/javascript" src="./JavaScript 的 this 原理 - 阮一峰的网络日志_files/stats.js.下载"></script>
+<script>
+var supportImg = document.querySelector('#support-img');
+
+if (supportImg && _hmt) {
+  _hmt.push(['_trackEvent', 'banner', 'load']);
+  supportImg.addEventListener('click', function () {
+    _hmt.push(['_trackEvent', 'banner', 'click']);
+  }, false);
+}
+
+var homepageImg = document.querySelector('#homepage_sponsor');
+if (homepageImg && _hmt) {
+  _hmt.push(['_trackEvent', 'homepage-banner', 'load']);
+  homepageImg.addEventListener('click', function () {
+    _hmt.push(['_trackEvent', 'homepage-banner', 'click']);
+  }, false);
+}
+</script>
+
+
+
+        </div>
+    </div>
+
+</body></html>
